@@ -9,6 +9,7 @@ import isListItem from './lib/isListItem';
 import isSoftNewlineEvent from 'draft-js/lib/isSoftNewlineEvent';
 import EditorToolbar from './lib/EditorToolbar';
 import EditorValue from './lib/EditorValue';
+import defaultFormatHandlers from './lib/defaultFormatHandlers';
 import LinkDecorator from './lib/LinkDecorator';
 import composite from './lib/composite';
 import cx from 'classnames';
@@ -22,6 +23,8 @@ import styles from './RichTextEditor.css';
 import type {ContentBlock} from 'draft-js';
 import type {ToolbarConfig} from './lib/EditorToolbarConfig';
 import type {ImportOptions} from './lib/EditorValue';
+import type {CustomStyles} from './customStyles';
+import {getStyles} from './customStyles';
 
 const MAX_LIST_DEPTH = 2;
 
@@ -51,6 +54,7 @@ type Props = {
   toolbarConfig?: ToolbarConfig;
   blockStyleFn?: (block: ContentBlock) => ?string;
   autoFocus?: boolean;
+  customStyles?: CustomStyles;
 };
 
 export default class RichTextEditor extends Component {
@@ -85,6 +89,7 @@ export default class RichTextEditor extends Component {
       disabled,
       toolbarConfig,
       blockStyleFn,
+      customStyles,
       ...otherProps // eslint-disable-line comma-dangle
     } = this.props;
     let editorState = value.getEditorState();
@@ -93,8 +98,8 @@ export default class RichTextEditor extends Component {
     // If the user changes block type before entering any text, we can either
     // style the placeholder or hide it. Let's just hide it for now.
     let combinedEditorClassName = cx({
-      [styles.editor]: true,
-      [styles.hidePlaceholder]: this._shouldHidePlaceholder(),
+      [getStyles('RichTextEditor', customStyles, styles).editor]: true,
+      [getStyles('RichTextEditor', customStyles, styles).hidePlaceholder]: this._shouldHidePlaceholder(),
     }, editorClassName);
     if (readOnly == null) {
       readOnly = disabled;
@@ -109,11 +114,12 @@ export default class RichTextEditor extends Component {
           onChange={this._onChange}
           focusEditor={this._focus}
           toolbarConfig={toolbarConfig}
+          customStyles={customStyles}
         />
       );
     }
     return (
-      <div className={cx(styles.root, className)}>
+      <div className={cx(getStyles('RichTextEditor', customStyles, styles).root, className)}>
         {editorToolbar}
         <div className={combinedEditorClassName}>
           <Editor
@@ -313,4 +319,4 @@ Object.assign(RichTextEditor, {
   createValueFromString,
 });
 
-export {EditorValue, decorator, createEmptyValue, createValueFromString};
+export {EditorValue, defaultFormatHandlers, decorator, createEmptyValue, createValueFromString};

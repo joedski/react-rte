@@ -16,7 +16,7 @@ import clearEntityForRange from './clearEntityForRange';
 import autobind from 'class-autobind';
 import cx from 'classnames';
 
-import styles from './EditorToolbar.css';
+import defaultStyles from './EditorToolbar.css';
 
 import type EventEmitter from 'events';
 import type {ToolbarConfig} from './EditorToolbarConfig';
@@ -30,6 +30,7 @@ type Props = {
   onChange: ChangeHandler;
   focusEditor: Function;
   toolbarConfig: ToolbarConfig;
+  customStyles?: {[styleName: string]: mixed};
 };
 
 type State = {
@@ -46,6 +47,12 @@ export default class EditorToolbar extends Component {
     this.state = {
       showLinkInput: false,
     };
+  }
+
+  getStyles() {
+    const {customStyles} = this.props;
+    if (customStyles) return customStyles.EditorToolbar;
+    return defaultStyles;
   }
 
   componentWillMount() {
@@ -84,7 +91,7 @@ export default class EditorToolbar extends Component {
       }
     });
     return (
-      <div className={cx(styles.root, className)}>
+      <div className={cx(this.getStyles().root, className)}>
         {buttonsGroups}
       </div>
     );

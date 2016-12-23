@@ -1,9 +1,12 @@
 /* @flow */
 import {ContentState, EditorState, convertToRaw, convertFromRaw} from 'draft-js';
-import {stateToHTML} from 'draft-js-export-html';
-import {stateFromHTML} from 'draft-js-import-html';
-import {stateToMarkdown} from 'draft-js-export-markdown';
-import {stateFromMarkdown} from 'draft-js-import-markdown';
+// import {stateToHTML} from 'draft-js-export-html';
+// import {stateFromHTML} from 'draft-js-import-html';
+// import {stateToMarkdown} from 'draft-js-export-markdown';
+// import {stateFromMarkdown} from 'draft-js-import-markdown';
+
+import type {FormatHandlerMap} from './defaultFormatHandlers';
+import _defaultFormatHandlers from './defaultFormatHandlers';
 
 import type {DraftDecoratorType as Decorator} from 'draft-js/lib/DraftDecoratorType';
 import type {Options as ImportOptions} from 'draft-js-import-html';
@@ -12,7 +15,18 @@ export type {ImportOptions, ExportOptions};
 
 type StringMap = {[key: string]: string};
 
+// const defaultFormatHandlers
+
 export default class EditorValue {
+  /**
+   * Facilitate adding to/overriding the list of import/export formats.
+   */
+
+  static _formatHandlers: FormatHandlerMap = _defaultFormatHandlers
+  static setFormatHandlers(map: FormatHandlerMap) {
+    EditorValue._formatHandlers = map;
+  }
+
   _editorState: EditorState;
   _cache: StringMap;
 
@@ -66,35 +80,21 @@ export default class EditorValue {
 
 function toString(editorState: EditorState, format: string, options?: ExportOptions): string {
   let contentState = editorState.getCurrentContent();
-  switch (format) {
-    case 'html': {
-      return stateToHTML(contentState, options);
-    }
-    case 'markdown': {
-      return stateToMarkdown(contentState);
-    }
-    case 'raw': {
-      return JSON.stringify(convertToRaw(contentState));
-    }
-    default: {
-      throw new Error('Format not supported: ' + format);
-    }
+  let handlerPair = EditorValue._formatHandlers[format];
+
+  if (!handlerPair) {
+    throw new Error('Format not supported: ' + format);
   }
+
+  return handlerPair.toString(contentState, options);
 }
 
 function fromString(markup: string, format: string, options?: ImportOptions): ContentState {
-  switch (format) {
-    case 'html': {
-      return stateFromHTML(markup, options);
-    }
-    case 'markdown': {
-      return stateFromMarkdown(markup);
-    }
-    case 'raw': {
-      return convertFromRaw(JSON.parse(markup));
-    }
-    default: {
-      throw new Error('Format not supported: ' + format);
-    }
+  let handlerPair = EditorValue._formatHandlers[format];
+
+  if (!handlerPair) {
+    throw new Error('Format not supported: ' + format);
   }
+
+  return handlerPair.fromString(markup, options);
 }
